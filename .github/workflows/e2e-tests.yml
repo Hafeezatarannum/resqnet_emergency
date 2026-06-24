@@ -22,18 +22,14 @@ jobs:
       - name: Install Dependencies
         run: npm ci || npm install
 
-      - name: Start Development Server
-        run: npm run dev &
-        env:
-          PORT: 5173
-
-      - name: Wait for Server
-        run: npx wait-on http://localhost:5173
-
-      - name: Run Web Tests
-        run: npm run test:web
+      - name: Start Server and Run Web Tests
+        run: |
+          npm run dev &
+          npx wait-on http-get://127.0.0.1:5173 -t 60000
+          npm run test:web
         env:
           CI: true
+          PORT: 5173
 
       - name: Upload Web Test Reports
         if: always()
