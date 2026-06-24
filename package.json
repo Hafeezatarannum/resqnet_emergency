@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:web": "mocha e2e-tests/web/*.test.js --reporter ./e2e-tests/reporter/excelReporter.js",
+    "test:mobile": "mocha e2e-tests/mobile/*.test.js --reporter ./e2e-tests/reporter/excelReporter.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
@@ -82,16 +84,21 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "chai": "^6.2.2",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "exceljs": "^4.4.0",
     "globals": "^15.15.0",
+    "mocha": "^11.7.6",
     "nitro": "3.0.260429-beta",
     "prettier": "^3.7.3",
+    "selenium-webdriver": "^4.45.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "webdriverio": "^9.29.0"
   }
 }

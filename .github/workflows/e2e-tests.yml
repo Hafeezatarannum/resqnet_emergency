@@ -1,0 +1,95 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  web-tests:
+    name: Selenium Web Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Start Development Server
+        run: npm run dev &
+        env:
+          PORT: 5173
+
+      - name: Wait for Server
+        run: npx wait-on http://localhost:5173
+
+      - name: Run Web Tests
+        run: npm run test:web
+        env:
+          CI: true
+
+      - name: Upload Web Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-test-reports
+          path: e2e-tests/reports/*.xlsx
+
+  mobile-tests:
+    name: Appium Mobile Tests
+    runs-on: macos-latest # Using macOS for better Android emulator hardware acceleration in Actions
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Build Android APK
+        run: |
+          npx cap sync android
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Start Appium Server
+        run: |
+          npm install -g appium
+          appium driver install uiautomator2
+          appium &
+          npx wait-on tcp:4723
+
+      - name: Run Appium Tests in Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: default
+          arch: x86_64
+          profile: pixel_4
+          script: npm run test:mobile
+        env:
+          CI: true
+
+      - name: Upload Mobile Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-test-reports
+          path: e2e-tests/reports/*.xlsx
