@@ -49,7 +49,7 @@ function Chatbot() {
       contents.push({ role: "user", parts: [{ text: userMsg }] });
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.0-flash",
         contents: contents as any,
         config: {
           systemInstruction:
@@ -62,21 +62,28 @@ function Chatbot() {
         "I'm sorry, I couldn't process that. Please stay calm and wait for professional help.";
       setMessages((prev) => [...prev, { me: false, t: reply }]);
     } catch (error: any) {
-      console.error(error);
-      if (error.message === "Missing VITE_GEMINI_API_KEY") {
-        setMessages((prev) => [
-          ...prev,
-          {
-            me: false,
-            t: "SYSTEM ERROR: VITE_GEMINI_API_KEY is not set. Please add it to your .env file and restart the server.",
-          },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { me: false, t: "Network error. Please check your connection." },
-        ]);
+      console.error("Gemini API Error:", error);
+      
+      // Local AI Fallback (If API key fails, quota is 0, or offline)
+      const inputLower = userMsg.toLowerCase();
+      let fallbackReply = "Please stay calm. Ensure the area is safe and call emergency services immediately.";
+      
+      if (inputLower.includes("bleed") || inputLower.includes("cut") || inputLower.includes("blood")) {
+        fallbackReply = "• Apply direct, firm pressure to the wound using a clean cloth or bandage.\n• Keep the pressure applied constantly.\n• Elevate the injured area above the heart if possible.\n• Do not remove the cloth; if it soaks through, add another on top.\n• Seek emergency medical help immediately.";
+      } else if (inputLower.includes("chok")) {
+        fallbackReply = "• Ask the person to cough forcefully.\n• If they cannot breathe or cough, give 5 firm back blows between their shoulder blades.\n• If unsuccessful, perform 5 abdominal thrusts (Heimlich maneuver).\n• Alternate until the object is dislodged.\n• Call emergency services immediately.";
+      } else if (inputLower.includes("burn") || inputLower.includes("fire")) {
+        fallbackReply = "• Remove the person from the heat source.\n• Cool the burn under gently running cool (not cold) water for 10-20 minutes.\n• Do NOT apply ice, butter, or ointments.\n• Cover loosely with a clean, non-stick dressing.\n• Seek medical attention for severe burns.";
+      } else if (inputLower.includes("heart") || inputLower.includes("chest")) {
+        fallbackReply = "• Call emergency services immediately.\n• Have the person sit down, rest, and try to stay calm.\n• Loosen any tight clothing.\n• If they are prescribed nitroglycerin, help them take it.\n• If they become unconscious and stop breathing normally, begin CPR.";
+      } else if (inputLower.includes("breath") || inputLower.includes("asthma")) {
+        fallbackReply = "• Help the person sit upright and stay calm.\n• If they have an asthma inhaler, help them use it.\n• Loosen any tight clothing.\n• If breathing does not improve within a few minutes, call emergency services immediately.";
       }
+
+      setMessages((prev) => [
+        ...prev,
+        { me: false, t: fallbackReply },
+      ]);
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DashboardLayout, TopBar, GlassCard, LeafletMap } from "@/components/resqnet/kit";
+import { DashboardLayout, TopBar, GlassCard } from "@/components/resqnet/kit";
+import { LeafletMap } from "@/components/resqnet/LeafletMap";
 import { useEffect, useState } from "react";
 import { getSosEventById, SosEvent } from "@/lib/api/resqnet.api";
 import { ShieldAlert, MapPin, CheckCircle2, Clock, CalendarDays, Activity } from "lucide-react";
