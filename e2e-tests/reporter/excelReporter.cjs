@@ -58,7 +58,10 @@ class ExcelReporter extends mocha.reporters.Base {
       };
     });
 
-    const reportDir = path.join(__dirname, '..', 'reports');
+    const reportDir = process.env.REPORT_DIR
+      ? path.resolve(process.cwd(), process.env.REPORT_DIR)
+      : path.join(__dirname, '..', 'reports');
+      
     if (!fs.existsSync(reportDir)) {
       fs.mkdirSync(reportDir, { recursive: true });
     }

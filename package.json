@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:web": "mocha e2e-tests/web/*.test.js --reporter ./e2e-tests/reporter/excelReporter.js",
-    "test:mobile": "mocha e2e-tests/mobile/*.test.js --reporter ./e2e-tests/reporter/excelReporter.js"
+    "test:web": "cross-env REPORT_DIR=./e2e-tests/reports/web mocha e2e-tests/web/*.test.cjs --reporter ./e2e-tests/reporter/excelReporter.cjs",
+    "test:mobile": "cross-env REPORT_DIR=./e2e-tests/reports/mobile mocha e2e-tests/mobile/*.test.cjs --reporter ./e2e-tests/reporter/excelReporter.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
@@ -85,6 +85,7 @@
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
     "chai": "^6.2.2",
+    "cross-env": "^10.1.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
