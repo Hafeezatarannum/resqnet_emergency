@@ -15,6 +15,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
+// Polyfill/dummy WebSocket on the server-side if missing (Node.js < 22)
+if (typeof window === 'undefined' && !globalThis.WebSocket) {
+  (globalThis as any).WebSocket = class DummyWebSocket {
+    constructor() {
+      throw new Error("WebSockets are not supported on the server side.");
+    }
+  };
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     // Persist session in localStorage so users stay logged in
