@@ -30,6 +30,8 @@ jobs:
         env:
           CI: true
           PORT: 5173
+          VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
 
       - name: Upload Web Test Reports
         if: always()
@@ -65,6 +67,9 @@ jobs:
           npx cap sync android
           cd android
           ./gradlew assembleDebug
+        env:
+          VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
 
       - name: Start Appium Server
         run: |
