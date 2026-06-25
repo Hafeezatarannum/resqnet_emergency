@@ -24,7 +24,7 @@ jobs:
 
       - name: Start Server and Run Web Tests
         run: |
-          npm run dev -- --host 127.0.0.1 &
+          npm run dev -- --host 127.0.0.1 --port 5173 &
           npx wait-on http://127.0.0.1:5173 -t 90000
           npm run test:web
         env:
