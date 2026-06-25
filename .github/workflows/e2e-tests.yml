@@ -24,8 +24,8 @@ jobs:
 
       - name: Start Server and Run Web Tests
         run: |
-          npm run dev &
-          npx wait-on http-get://127.0.0.1:5173 -t 60000
+          npm run dev -- --host 127.0.0.1 &
+          npx wait-on http://127.0.0.1:5173 -t 90000
           npm run test:web
         env:
           CI: true
@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: web-test-reports
-          path: e2e-tests/reports/*.xlsx
+          path: e2e-tests/reports/web/*.xlsx
 
   mobile-tests:
     name: Appium Mobile Tests
@@ -89,4 +89,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mobile-test-reports
-          path: e2e-tests/reports/*.xlsx
+          path: e2e-tests/reports/mobile/*.xlsx
