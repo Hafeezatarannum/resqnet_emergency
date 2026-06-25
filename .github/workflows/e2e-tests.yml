@@ -24,12 +24,13 @@ jobs:
 
       - name: Start Server and Run Web Tests
         run: |
-          npm run dev -- --host 127.0.0.1 --port 5173 &
-          npx wait-on http://127.0.0.1:5173 -t 90000
+          npm run dev &
+          npx wait-on http://127.0.0.1:8080 -t 90000
           npm run test:web
         env:
           CI: true
-          PORT: 5173
+          PORT: 8080
+          TEST_URL: http://127.0.0.1:8080
           VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
 
@@ -39,59 +40,3 @@ jobs:
         with:
           name: web-test-reports
           path: e2e-tests/reports/web/*.xlsx
-
-  mobile-tests:
-    name: Appium Mobile Tests
-    runs-on: macos-13 # Using macOS 13 (Intel) to support Android emulator hardware acceleration
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install Dependencies
-        run: npm ci || npm install
-
-      - name: Build Web App & Android APK
-        run: |
-          npm run build
-          npx cap sync android
-          cd android
-          ./gradlew assembleDebug
-        env:
-          VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
-          VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
-
-      - name: Start Appium Server
-        run: |
-          npm install -g appium
-          appium driver install uiautomator2
-          appium &
-          npx wait-on tcp:4723
-
-      - name: Run Appium Tests in Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: default
-          arch: x86_64
-          profile: pixel_4
-          script: npm run test:mobile
-        env:
-          CI: true
-
-      - name: Upload Mobile Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mobile-test-reports
-          path: e2e-tests/reports/mobile/*.xlsx

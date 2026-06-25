@@ -2,6 +2,20 @@ const { Builder, By, until, Key } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const { expect } = require('chai');
 
+async function dismissSplash(driver) {
+  try {
+    // Wait up to 3 seconds for the Skip button to appear if splash is showing
+    const skipButton = await driver.wait(
+      until.elementLocated(By.xpath("//button[contains(., 'Skip')]")),
+      3000
+    );
+    await skipButton.click();
+    await driver.sleep(600); // Wait for transition
+  } catch (e) {
+    // Splash screen might not be present or already dismissed
+  }
+}
+
 describe('ResQNet E2E Feature Tests', function() {
   this.timeout(60000); // 60 seconds timeout
   let driver;
@@ -31,7 +45,7 @@ describe('ResQNet E2E Feature Tests', function() {
     // Wait for settings page to load (checking for an element like a switch or header)
     // We'll wait for body and a generic container
     await driver.wait(until.elementLocated(By.css('body')), 10000);
-    await driver.sleep(2000); // Let UI render fully
+    await dismissSplash(driver);
     
     // Find all switch buttons (role="switch")
     const switches = await driver.findElements(By.css('button[role="switch"]'));
@@ -53,7 +67,7 @@ describe('ResQNet E2E Feature Tests', function() {
       
       // Refresh to verify persistence (localStorage)
       await driver.navigate().refresh();
-      await driver.sleep(2000);
+      await dismissSplash(driver);
       
       const refreshedSwitches = await driver.findElements(By.css('button[role="switch"]'));
       if (refreshedSwitches.length > 0) {
@@ -68,6 +82,7 @@ describe('ResQNet E2E Feature Tests', function() {
 
   it('AI Emergency Assistant: Should load chatbot and send message', async function() {
     await driver.get(`${targetUrl}/chatbot`);
+    await dismissSplash(driver);
     
     // Wait for the input field (usually type="text" or a specific class/placeholder)
     // Because we don't know the exact class, we'll look for input/textarea
@@ -93,7 +108,7 @@ describe('ResQNet E2E Feature Tests', function() {
 
   it('Volunteer Dashboard: Should load dashboard interface', async function() {
     await driver.get(`${targetUrl}/volunteer-dashboard`);
-    await driver.sleep(2000);
+    await dismissSplash(driver);
     
     const pageText = await driver.findElement(By.css('body')).getText();
     expect(pageText).to.not.be.empty;
@@ -101,7 +116,7 @@ describe('ResQNet E2E Feature Tests', function() {
 
   it('Live GPS Tracking: Should load map', async function() {
     await driver.get(`${targetUrl}/live-tracking`);
-    await driver.sleep(2000);
+    await dismissSplash(driver);
     
     // Look for map container (Leaflet usually has leaflet-container class)
     try {
@@ -116,7 +131,7 @@ describe('ResQNet E2E Feature Tests', function() {
 
   it('SOS Dispatch: Should trigger SOS workflow', async function() {
     await driver.get(`${targetUrl}/home`);
-    await driver.sleep(2000);
+    await dismissSplash(driver);
     
     // Look for SOS button (often contains text "SOS" or is a large button)
     // We use an xpath to find a button containing 'SOS' or we just pass if not found (for robustness in general test)

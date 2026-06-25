@@ -2,6 +2,20 @@ const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const { expect } = require('chai');
 
+async function dismissSplash(driver) {
+  try {
+    // Wait up to 3 seconds for the Skip button to appear if splash is showing
+    const skipButton = await driver.wait(
+      until.elementLocated(By.xpath("//button[contains(., 'Skip')]")),
+      3000
+    );
+    await skipButton.click();
+    await driver.sleep(600); // Wait for transition
+  } catch (e) {
+    // Splash screen might not be present or already dismissed
+  }
+}
+
 describe('Web Application E2E Test', function() {
   this.timeout(45000); // 45 seconds timeout
   let driver;
@@ -30,25 +44,25 @@ describe('Web Application E2E Test', function() {
     
     // Wait until body is present (basic check)
     await driver.wait(until.elementLocated(By.css('body')), 5000);
+    await dismissSplash(driver);
     
     const title = await driver.getTitle();
     console.log('Page title:', title);
     
-    // You can add more specific assertions here based on your app's content
     expect(title).to.not.be.empty;
   });
 
-  it('should have a root element', async function() {
-    const rootElement = await driver.findElement(By.id('root'));
-    expect(rootElement).to.exist;
+  it('should have a header element', async function() {
+    const headerElement = await driver.findElement(By.css('header'));
+    expect(headerElement).to.exist;
   });
   
   it('should navigate to the login page', async function() {
     // Go to login page
     await driver.get(`${targetUrl}/login`);
+    await dismissSplash(driver);
     
     // Wait for a form element, an input, or a button. 
-    // Most standard login forms will have an input of type 'email' or a generic text input for username
     const emailInput = await driver.wait(until.elementLocated(By.css('input[type="email"], input[name="email"], input[placeholder*="Email"]')), 10000);
     
     expect(emailInput).to.exist;

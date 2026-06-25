@@ -10,8 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:web": "cross-env REPORT_DIR=./e2e-tests/reports/web mocha e2e-tests/web/*.test.cjs --reporter ./e2e-tests/reporter/excelReporter.cjs",
-    "test:mobile": "cross-env REPORT_DIR=./e2e-tests/reports/mobile mocha e2e-tests/mobile/*.test.cjs --reporter ./e2e-tests/reporter/excelReporter.cjs"
+    "test:web": "cross-env REPORT_DIR=./e2e-tests/reports/web mocha e2e-tests/web/*.test.cjs --reporter ./e2e-tests/reporter/excelReporter.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",

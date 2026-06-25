@@ -146,6 +146,7 @@ function Chatbot() {
         </div>
         <div className="w-full flex items-center gap-2 border-t border-border bg-secondary/60 p-3 shrink-0">
           <input
+            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
