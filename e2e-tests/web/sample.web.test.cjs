@@ -5,7 +5,7 @@ const { expect } = require('chai');
 describe('Web Application E2E Test', function() {
   this.timeout(45000); // 45 seconds timeout
   let driver;
-  const targetUrl = process.env.TEST_URL || 'http://localhost:5173';
+  const targetUrl = process.env.TEST_URL || 'http://127.0.0.1:5173';
 
   before(async function() {
     // Initialize Chrome driver
