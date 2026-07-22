@@ -34,7 +34,7 @@ export function DashboardLayout({
       {withNav && <SideNav />}
       <div className="flex-1 relative flex flex-col min-w-0 w-full h-full overflow-hidden">
         {withNav && <GlobalHeader />}
-        <div className="flex-1 overflow-y-auto no-scrollbar pb-16 md:pb-0">
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-16 md:pb-0 w-full max-w-3xl mx-auto">
           {children}
         </div>
       </div>

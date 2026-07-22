@@ -18,15 +18,19 @@ import {
   Download,
 } from "lucide-react";
 
+import { useTheme } from "@/lib/theme";
+import { Moon, Sun } from "lucide-react";
+
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "ResQNet — Emergency Platform" }] }),
   component: Landing,
 });
 
 function Landing() {
+  const { theme, setTheme } = useTheme();
+  
   return (
-    <DashboardLayout>
-      <div className="w-full h-full overflow-y-auto overflow-x-hidden bg-background text-foreground scroll-smooth">
+    <div className="w-full min-h-screen flex flex-col bg-background text-foreground scroll-smooth overflow-x-hidden">
         
         {/* Navigation Bar */}
         <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur-xl">
@@ -44,6 +48,12 @@ function Landing() {
           </nav>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card hover:bg-secondary transition-colors"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <Link
               to="/login"
               className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
@@ -89,13 +99,10 @@ function Landing() {
               The world's most advanced emergency response platform. Instantly connect with nearby responders, hospitals, and family members with a single tap.
             </p>
 
-            <div className="flex justify-center pt-4 gap-4 flex-col sm:flex-row items-center w-full max-w-sm mx-auto sm:max-w-none">
-              <GlowButton to="/login" className="w-full sm:w-auto h-14 px-8 text-base shadow-xl shadow-primary/25">
+            <div className="flex justify-center pt-4 w-full">
+              <GlowButton to="/login" className="h-14 px-12 text-base shadow-xl shadow-primary/25">
                 Login
               </GlowButton>
-              <a href="/resqnet.apk" download className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-8 h-14 text-base font-bold text-foreground hover:bg-secondary/50 transition-colors w-full sm:w-auto">
-                <Download className="w-5 h-5" /> Download APK
-              </a>
             </div>
           </div>
         </section>
@@ -344,6 +351,5 @@ function Landing() {
           </div>
         </footer>
       </div>
-    </DashboardLayout>
   );
 }

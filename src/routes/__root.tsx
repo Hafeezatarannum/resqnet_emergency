@@ -129,7 +129,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-background text-foreground antialiased">
         {children}
         <Scripts />
       </body>
@@ -143,13 +143,13 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
   React.useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
-    }, 2000);
+    }, 800);
     return () => clearTimeout(timer);
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background text-foreground transition-opacity duration-500">
-      <div className="absolute top-6 right-6 flex items-center gap-4">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background text-foreground transition-opacity duration-300">
+      <div className="absolute top-6 right-6 flex items-center gap-4 z-[10000]">
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="h-10 w-10 rounded-full border border-border bg-card flex items-center justify-center hover:bg-secondary transition-colors"
@@ -158,7 +158,7 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
         </button>
         <button
           onClick={onComplete}
-          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-sm font-bold bg-primary/10 px-4 py-2 rounded-full text-primary hover:bg-primary/20 transition-colors pointer-events-auto"
         >
           Skip <ArrowRight className="h-4 w-4" />
         </button>

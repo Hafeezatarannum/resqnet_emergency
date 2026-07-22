@@ -5,9 +5,14 @@ const config: CapacitorConfig = {
   appName: 'ResQNet',
   webDir: 'dist/client',
   server: {
-    url: 'https://resqnet-emergency.platform-needhelpers.workers.dev/?v=3',
+    url: 'http://10.42.138.26:5173',
     cleartext: true
-  }
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 0,
+    },
+  },
 };
 
 export default config;

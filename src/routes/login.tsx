@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { GlowButton, Logo } from "@/components/resqnet/kit";
 import { Mail, Lock, AlertTriangle, Loader2, Eye, EyeOff, CircleAlert } from "lucide-react";
@@ -44,7 +44,13 @@ function mapSupabaseError(message: string): string {
 
 function Login() {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate({ to: "/role" });
+    }
+  }, [user, navigate]);
 
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -114,24 +120,28 @@ function Login() {
     if (!validate()) return;
 
     setLoading(true);
-    const { error } = await signIn(email.trim(), password);
-    setLoading(false);
-
-    if (error) {
-      const mapped = mapSupabaseError(error.message ?? "");
-      // If it's specifically about password, show under password field
-      if (
-        error.message?.toLowerCase().includes("credentials") ||
-        error.message?.toLowerCase().includes("password")
-      ) {
-        setPasswordErr("Incorrect password. Please try again.");
-      } else if (error.message?.toLowerCase().includes("email")) {
-        setEmailErr("Invalid email address.");
+    try {
+      const { error } = await signIn(email.trim(), password);
+      
+      if (error) {
+        const mapped = mapSupabaseError(error.message ?? "");
+        if (
+          error.message?.toLowerCase().includes("credentials") ||
+          error.message?.toLowerCase().includes("password")
+        ) {
+          setPasswordErr("Incorrect password. Please try again.");
+        } else if (error.message?.toLowerCase().includes("email")) {
+          setEmailErr("Invalid email address.");
+        } else {
+          setServerError(mapped);
+        }
       } else {
-        setServerError(mapped);
+        navigate({ to: "/role" });
       }
-    } else {
-      navigate({ to: "/role" });
+    } catch (err: any) {
+      setServerError(err?.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 

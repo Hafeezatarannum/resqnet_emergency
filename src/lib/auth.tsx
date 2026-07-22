@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { supabase, type User, type Session } from '@/lib/supabase'
 
 // ---------------------------------------------------------------------------
@@ -48,7 +49,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    // Capacitor Deep Link listener for OAuth callbacks
+    let appListener: any;
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/app').then(({ App }) => {
+        appListener = App.addListener('appUrlOpen', (event) => {
+          const url = event.url;
+          if (url.includes('com.resqnet.app://auth/callback')) {
+            import('@capacitor/browser').then(({ Browser }) => Browser.close());
+            
+            const hash = url.split('#')[1];
+            if (hash) {
+              const params = new URLSearchParams(hash.replace(/&amp;/g, '&'));
+              const access_token = params.get('access_token');
+              const refresh_token = params.get('refresh_token');
+              if (access_token && refresh_token) {
+                supabase.auth.setSession({ access_token, refresh_token });
+              }
+            }
+          }
+        });
+      });
+    }
+
+    return () => {
+      subscription.unsubscribe()
+      if (appListener) appListener.remove()
+    }
   }, [])
 
   // ---- Auth actions -------------------------------------------------------
@@ -72,10 +99,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    // Determine redirect URL based on platform
+    let redirectUrl = `${window.location.origin}/home`
+    const isCapacitor = Capacitor.isNativePlatform();
+
+    if (isCapacitor) {
+      redirectUrl = 'com.resqnet.app://auth/callback'
+    }
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/home` },
+      options: { 
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: isCapacitor,
+        queryParams: {
+          prompt: 'select_account'
+        }
+      },
     })
+    
+    if (isCapacitor && data?.url) {
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.open({ url: data.url });
+    }
+    
     return { error: error as Error | null }
   }
 
