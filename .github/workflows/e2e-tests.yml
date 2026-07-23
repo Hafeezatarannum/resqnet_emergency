@@ -1,4 +1,4 @@
-name: ResQNet Web, Mobile & Load Automation Tests
+name: ResQNet 5-Suite Complete Automation Testing Pipeline
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  e2e-and-load-tests:
-    name: Web (308), Appium Mobile (500) & Load (300 VUs) Test Suite
+  full-automation-matrix:
+    name: Web (308), Appium Mobile (500), Field Validation (300), Security (300) & Load (300 VUs)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -43,8 +43,24 @@ jobs:
           CI: true
           PORT: 5173
           TEST_URL: http://127.0.0.1:5173
-          VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
-          VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
+
+      - name: Run Field Validation Tests (300+ Test Cases)
+        if: always()
+        run: |
+          npx cross-env HEADLESS=true npm run test:field-validation
+        env:
+          CI: true
+          PORT: 5173
+          TEST_URL: http://127.0.0.1:5173
+
+      - name: Run Security Vulnerability Audit Tests (300+ Test Cases)
+        if: always()
+        run: |
+          npx cross-env HEADLESS=true npm run test:vulnerability
+        env:
+          CI: true
+          PORT: 5173
+          TEST_URL: http://127.0.0.1:5173
 
       - name: Run Baseline / Load Test (300 VUs / 60 Seconds)
         if: always()
@@ -70,6 +86,22 @@ jobs:
         with:
           name: ResQNet_Mobile_Appium_E2E_Test_Report_Excel
           path: e2e-tests/reports/mobile/*.xlsx
+          retention-days: 30
+
+      - name: Upload Field Validation Excel Report (300+ Test Cases)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResQNet_Field_Validation_Report_Excel
+          path: e2e-tests/reports/field-validation/*.xlsx
+          retention-days: 30
+
+      - name: Upload Security Vulnerability Excel Report (300+ Test Cases)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResQNet_Security_Vulnerability_Report_Excel
+          path: e2e-tests/reports/vulnerability/*.xlsx
           retention-days: 30
 
       - name: Upload Baseline Load Test Excel Report (300 VUs / 60s)

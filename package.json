@@ -12,7 +12,10 @@
     "format": "prettier --write .",
     "test:web": "cross-env REPORT_DIR=./e2e-tests/reports/web mocha e2e-tests/web/*.test.cjs --reporter ./e2e-tests/reporter/excelReporter.cjs",
     "test:mobile": "cross-env REPORT_DIR=./e2e-tests/reports/mobile mocha e2e-tests/mobile/*.test.cjs --reporter ./e2e-tests/reporter/mobileExcelReporter.cjs",
-    "test:load": "cross-env REPORT_DIR=./e2e-tests/reports/load node e2e-tests/load/resqnet_load_300vu.cjs"
+    "test:load": "cross-env REPORT_DIR=./e2e-tests/reports/load node e2e-tests/load/resqnet_load_300vu.cjs",
+    "test:field-validation": "cross-env REPORT_DIR=./e2e-tests/reports/field-validation mocha e2e-tests/field-validation/*.test.cjs --reporter ./e2e-tests/reporter/fieldValidationExcelReporter.cjs",
+    "test:vulnerability": "cross-env REPORT_DIR=./e2e-tests/reports/vulnerability mocha e2e-tests/vulnerability/*.test.cjs --reporter ./e2e-tests/reporter/vulnerabilityExcelReporter.cjs",
+    "test:all": "npm run test:web && npm run test:mobile && npm run test:field-validation && npm run test:vulnerability && npm run test:load"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
