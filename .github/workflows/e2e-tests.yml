@@ -1,4 +1,4 @@
-name: ResQNet Web & Mobile E2E Automation Tests
+name: ResQNet Web, Mobile & Load Automation Tests
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  e2e-tests:
-    name: Web & Appium Mobile E2E Test Suite
+  e2e-and-load-tests:
+    name: Web (308), Appium Mobile (500) & Load (300 VUs) Test Suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -46,6 +46,16 @@ jobs:
           VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
 
+      - name: Run Baseline / Load Test (300 VUs / 60 Seconds)
+        if: always()
+        run: |
+          npm run test:load
+        env:
+          CI: true
+          TEST_URL: http://127.0.0.1:5173
+          VUS: 300
+          DURATION: 60
+
       - name: Upload Web E2E Excel Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -60,4 +70,12 @@ jobs:
         with:
           name: ResQNet_Mobile_Appium_E2E_Test_Report_Excel
           path: e2e-tests/reports/mobile/*.xlsx
+          retention-days: 30
+
+      - name: Upload Baseline Load Test Excel Report (300 VUs / 60s)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResQNet_Load_Test_Report_Excel
+          path: e2e-tests/reports/load/*.xlsx
           retention-days: 30
