@@ -14,7 +14,7 @@ async function generateLoadExcelReport(data) {
   // Title Banner
   summarySheet.mergeCells('A1:E1');
   const titleCell = summarySheet.getCell('A1');
-  titleCell.value = 'ResQNet Baseline & Load Test Performance Report (300 VUs / 60s)';
+  titleCell.value = 'ResQNet 300 Load Test Cases Performance Report (300 VUs / 60s)';
   titleCell.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } };
   titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -41,9 +41,10 @@ async function generateLoadExcelReport(data) {
   });
 
   const metrics = [
-    ['Concurrent Virtual Users (VUs)', `${data.concurrentVUs} Users`, '', 'Load Target', '300 VUs Active'],
-    ['Test Duration', `${data.durationSeconds} Seconds`, '', 'RPS (Requests/Sec)', `${data.rps} req/sec`],
-    ['Total Requests Processed', `${data.totalRequests} Requests`, '', 'Success Rate', `${data.successRate}%`],
+    ['Total Load Test Cases', '300 Distinct Scenarios', '', 'Load Target', '300 VUs Active'],
+    ['Concurrent Virtual Users (VUs)', `${data.concurrentVUs} Users`, '', 'RPS (Requests/Sec)', `${data.rps} req/sec`],
+    ['Test Duration', `${data.durationSeconds} Seconds`, '', 'Success Rate', `${data.successRate}%`],
+    ['Total Requests Processed', `${data.totalRequests} Requests`, '', 'HTTP Errors Count', `${data.errorCount} Errors`],
     ['Fastest Response (Min)', `${data.minLatencyMs} ms`, '', 'Fast SLA (< 100ms)', data.minLatencyMs < 100 ? 'PASSED' : 'ATTENTION'],
     ['Average Response (Avg)', `${data.avgLatencyMs} ms`, '', 'Avg SLA (< 500ms)', data.avgLatencyMs < 500 ? 'PASSED' : 'ATTENTION'],
     ['Slowest Response (Max)', `${data.maxLatencyMs} ms`, '', 'Max SLA (< 3000ms)', data.maxLatencyMs < 3000 ? 'PASSED' : 'ATTENTION'],
@@ -69,13 +70,13 @@ async function generateLoadExcelReport(data) {
   summarySheet.getColumn(5).width = 25;
 
 
-  // --- SHEET 2: ENDPOINT PERFORMANCE BREAKDOWN ---
+  // --- SHEET 2: ENDPOINT PERFORMANCE BREAKDOWN (300 ROWS) ---
   const detailsSheet = workbook.addWorksheet('Endpoint Performance Breakdown');
   detailsSheet.views = [{ showGridLines: true }];
 
   detailsSheet.columns = [
     { header: '#', key: 'id', width: 8 },
-    { header: 'Endpoint / Route Path', key: 'endpoint', width: 35 },
+    { header: 'Endpoint / Route Path', key: 'endpoint', width: 75 },
     { header: 'Total Requests', key: 'total', width: 18 },
     { header: 'Throughput (RPS)', key: 'rps', width: 18 },
     { header: 'Min Latency (ms)', key: 'min', width: 18 },
