@@ -1,10 +1,13 @@
 package com.example.resqnet.ui.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +42,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen() {
+    val context = LocalContext.current
     var activeTab by remember { mutableStateOf("Account") }
 
     var fullName by remember { mutableStateOf(ResQNetRepository.activeProfileState.full_name ?: "Shaik Hafeeza Tarannum") }
@@ -50,47 +55,46 @@ fun SettingsScreen() {
     // Settings Toggles
     var locationServices by remember { mutableStateOf(true) }
     var medicalSharing by remember { mutableStateOf(true) }
-    var voiceActivation by remember { mutableStateOf(false) }
+    var voiceActivation by remember { mutableStateOf(true) }
     var batteryOptimization by remember { mutableStateOf(false) }
-    var selectedTheme by remember { mutableStateOf("Dark") }
 
     val tabs = listOf("Account", "Appearance", "Privacy", "Emergency", "Device")
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ResQBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         Text(
             text = "Settings",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
         // Scrollable Tabs Header
-        Row(
+        LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            tabs.forEach { tab ->
+            items(tabs) { tab ->
                 val isSelected = activeTab == tab
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(if (isSelected) ResQPrimaryRed else ResQCardBackground)
-                        .border(1.dp, if (isSelected) ResQPrimaryRed else ResQCardBorder, RoundedCornerShape(16.dp))
+                        .background(if (isSelected) ResQPrimaryRed else MaterialTheme.colorScheme.surface)
+                        .border(1.dp, if (isSelected) ResQPrimaryRed else MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
                         .clickable { activeTab = tab }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = tab,
                         color = Color.White,
-                        fontSize = 12.sp,
+                        fontSize = 13.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                     )
                 }
@@ -108,13 +112,13 @@ fun SettingsScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(ResQCardBackground)
-                                .border(1.dp, ResQCardBorder, RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
                                 .padding(16.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text(text = "Account Information", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(text = "Edit your name and phone number synced to Supabase.", fontSize = 12.sp, color = ResQTextMuted)
+                                Text(text = "Account Information", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(text = "Edit your name and phone number synced to Supabase.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                                 if (saveMessage != null) {
                                     Text(text = saveMessage!!, color = ResQSuccessGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -130,7 +134,7 @@ fun SettingsScreen() {
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = ResQPrimaryRed,
-                                        unfocusedBorderColor = ResQCardBorder
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                                     )
                                 )
 
@@ -144,7 +148,7 @@ fun SettingsScreen() {
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = ResQPrimaryRed,
-                                        unfocusedBorderColor = ResQCardBorder
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                                     )
                                 )
 
@@ -156,6 +160,7 @@ fun SettingsScreen() {
                                             ResQNetRepository.updateProfile(updated)
                                             isSaving = false
                                             saveMessage = "User name updated successfully!"
+                                            Toast.makeText(context, "Account information saved!", Toast.LENGTH_SHORT).show()
                                         }
                                     },
                                     modifier = Modifier.fillMaxWidth(),
@@ -177,8 +182,8 @@ fun SettingsScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(ResQCardBackground)
-                                .border(1.dp, ResQCardBorder, RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
                                 .padding(16.dp)
                         ) {
                             Row(
@@ -189,8 +194,8 @@ fun SettingsScreen() {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Icon(imageVector = Icons.Default.Work, contentDescription = null, tint = ResQBrandBlue)
                                     Column {
-                                        Text(text = "Volunteer Mode", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                        Text(text = "Switch account to First Responder role", fontSize = 11.sp, color = ResQTextMuted)
+                                        Text(text = "Volunteer Mode", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                                        Text(text = "Switch account to First Responder role", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
 
@@ -202,6 +207,7 @@ fun SettingsScreen() {
                                         coroutineScope.launch {
                                             ResQNetRepository.setUserRole(if (checked) "volunteer" else "user")
                                         }
+                                        Toast.makeText(context, "Mode switched to ${if (checked) "Volunteer" else "Citizen"}", Toast.LENGTH_SHORT).show()
                                     },
                                     colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = ResQBrandBlue)
                                 )
@@ -216,20 +222,46 @@ fun SettingsScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(ResQCardBackground)
-                                .border(1.dp, ResQCardBorder, RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
                                 .padding(16.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text(text = "Theme & Display", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(text = "Theme & Display", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    ThemeOptionTile(modifier = Modifier.weight(1f), title = "Light", icon = Icons.Default.LightMode, isSelected = selectedTheme == "Light") { selectedTheme = "Light" }
-                                    ThemeOptionTile(modifier = Modifier.weight(1f), title = "Dark", icon = Icons.Default.DarkMode, isSelected = selectedTheme == "Dark") { selectedTheme = "Dark" }
-                                    ThemeOptionTile(modifier = Modifier.weight(1f), title = "System", icon = Icons.Default.Contrast, isSelected = selectedTheme == "System") { selectedTheme = "System" }
+                                    ThemeOptionTile(
+                                        modifier = Modifier.weight(1f),
+                                        title = "Light",
+                                        icon = Icons.Default.LightMode,
+                                        isSelected = ResQNetRepository.selectedThemeState == "Light"
+                                    ) {
+                                        ResQNetRepository.selectedThemeState = "Light"
+                                        Toast.makeText(context, "Light Theme Applied!", Toast.LENGTH_SHORT).show()
+                                    }
+
+                                    ThemeOptionTile(
+                                        modifier = Modifier.weight(1f),
+                                        title = "Dark",
+                                        icon = Icons.Default.DarkMode,
+                                        isSelected = ResQNetRepository.selectedThemeState == "Dark"
+                                    ) {
+                                        ResQNetRepository.selectedThemeState = "Dark"
+                                        Toast.makeText(context, "Dark Theme Applied!", Toast.LENGTH_SHORT).show()
+                                    }
+
+                                    ThemeOptionTile(
+                                        modifier = Modifier.weight(1f),
+                                        title = "System",
+                                        icon = Icons.Default.Contrast,
+                                        isSelected = ResQNetRepository.selectedThemeState == "System"
+                                    ) {
+                                        ResQNetRepository.selectedThemeState = "System"
+                                        Toast.makeText(context, "System Default Theme Applied!", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
@@ -242,14 +274,20 @@ fun SettingsScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(ResQCardBackground)
-                                .border(1.dp, ResQCardBorder, RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
                                 .padding(16.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                                ToggleSettingRow("Location Services", "Allow background GPS tracking for fast SOS response.", locationServices) { locationServices = it }
-                                HorizontalDivider(color = ResQCardBorder)
-                                ToggleSettingRow("Medical Data Sharing", "Share medical profile with verified responders.", medicalSharing) { medicalSharing = it }
+                                ToggleSettingRow("Location Services", "Allow background GPS tracking for fast SOS response.", locationServices) {
+                                    locationServices = it
+                                    Toast.makeText(context, "Location Services ${if (it) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+                                }
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                                ToggleSettingRow("Medical Data Sharing", "Share medical profile with verified responders.", medicalSharing) {
+                                    medicalSharing = it
+                                    Toast.makeText(context, "Medical Sharing ${if (it) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                     }
@@ -261,12 +299,15 @@ fun SettingsScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(ResQCardBackground)
-                                .border(1.dp, ResQCardBorder, RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
                                 .padding(16.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                                ToggleSettingRow("Voice Activation", "Always listen for \"Help Me\" keyword.", voiceActivation) { voiceActivation = it }
+                                ToggleSettingRow("Voice Activation", "Always listen for \"Help Me\" keyword.", voiceActivation) {
+                                    voiceActivation = it
+                                    Toast.makeText(context, "Voice Activation ${if (it) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                     }
@@ -278,12 +319,15 @@ fun SettingsScreen() {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(ResQCardBackground)
-                                .border(1.dp, ResQCardBorder, RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
                                 .padding(16.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                                ToggleSettingRow("Battery Optimization", "Reduce background scanning to save battery.", batteryOptimization) { batteryOptimization = it }
+                                ToggleSettingRow("Battery Optimization", "Reduce background scanning to save battery.", batteryOptimization) {
+                                    batteryOptimization = it
+                                    Toast.makeText(context, "Battery Optimization ${if (it) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                     }
@@ -304,16 +348,16 @@ private fun ThemeOptionTile(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isSelected) ResQPrimaryRed.copy(alpha = 0.15f) else ResQCardBackground)
-            .border(1.dp, if (isSelected) ResQPrimaryRed else ResQCardBorder, RoundedCornerShape(16.dp))
+            .background(if (isSelected) ResQPrimaryRed.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface)
+            .border(1.dp, if (isSelected) ResQPrimaryRed else MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
             .clickable { onClick() }
             .padding(14.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(imageVector = icon, contentDescription = title, tint = if (isSelected) ResQPrimaryRed else ResQTextMuted, modifier = Modifier.size(22.dp))
+            Icon(imageVector = icon, contentDescription = title, tint = if (isSelected) ResQPrimaryRed else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
             Spacer(modifier = Modifier.height(6.dp))
-            Text(text = title, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = title, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -331,8 +375,8 @@ private fun ToggleSettingRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            Text(text = subtitle, fontSize = 11.sp, color = ResQTextMuted)
+            Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(
             checked = checked,

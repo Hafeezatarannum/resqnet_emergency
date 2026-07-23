@@ -1,5 +1,11 @@
 package com.example.resqnet.ui.home
 
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,17 +26,21 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.resqnet.data.ResQNetRepository
 import com.example.resqnet.data.RoleManager
 import com.example.resqnet.data.SosEventItem
 import com.example.resqnet.data.UserRole
 import com.example.resqnet.theme.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlin.math.sqrt
 
 @Composable
 fun HomeScreen(
@@ -76,11 +86,60 @@ private fun UserHomeContent(
     onNavigateToProfile: () -> Unit,
     onNavigateToAlerts: () -> Unit
 ) {
+    val context = LocalContext.current
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     val greeting = when {
         hour < 12 -> "Good Morning"
         hour < 17 -> "Good Afternoon"
         else -> "Good Evening"
+    }
+
+    val userName = ResQNetRepository.activeProfileState.full_name?.takeIf { it.isNotBlank() } ?: "User"
+    var showVoiceDialog by remember { mutableStateOf(false) }
+
+    // Accelerometer Sensor Listener for Shake SOS (Safely debounced)
+    DisposableEffect(Unit) {
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        var lastShakeTime = 0L
+
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                if (event == null) return
+                val x = event.values[0]
+                val y = event.values[1]
+                val z = event.values[2]
+                val acceleration = sqrt((x * x + y * y + z * z).toDouble()) - SensorManager.GRAVITY_EARTH
+                if (acceleration > 14) { // Vigorous shake / drop threshold
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastShakeTime > 4000) { // 4 sec debounce
+                        lastShakeTime = currentTime
+                        onNavigateToShakeSos()
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+
+        if (accelerometer != null) {
+            sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+
+        onDispose {
+            sensorManager.unregisterListener(listener)
+        }
+    }
+
+    // Voice SOS Custom Listening Modal
+    if (showVoiceDialog) {
+        VoiceListeningDialog(
+            onDismiss = { showVoiceDialog = false },
+            onTrigger = {
+                showVoiceDialog = false
+                onNavigateToVoiceSos()
+            }
+        )
     }
 
     // SOS Pulse Animation
@@ -102,14 +161,14 @@ private fun UserHomeContent(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
     ) {
-        // Greeting & Safe Status
+        // Dynamic Greeting Name
         item {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "$greeting, User 👋",
+                    text = "$greeting, $userName 👋",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -193,7 +252,7 @@ private fun UserHomeContent(
                         .clip(RoundedCornerShape(20.dp))
                         .background(ResQCardBackground)
                         .border(1.dp, ResQCardBorder, RoundedCornerShape(20.dp))
-                        .clickable { onNavigateToVoiceSos() }
+                        .clickable { showVoiceDialog = true }
                         .padding(14.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -344,6 +403,75 @@ private fun UserHomeContent(
                             Text(text = "GPS & Supabase Live Network Connected", fontSize = 11.sp, color = ResQTextMuted)
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun VoiceListeningDialog(
+    onDismiss: () -> Unit,
+    onTrigger: () -> Unit
+) {
+    var countdown by remember { mutableStateOf(3) }
+
+    LaunchedEffect(Unit) {
+        while (countdown > 0) {
+            delay(1000)
+            countdown--
+        }
+        onTrigger()
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color(0xFF0F2236))
+                .border(1.dp, ResQPrimaryRed.copy(alpha = 0.4f), RoundedCornerShape(28.dp))
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(ResQPrimaryRed.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = Icons.Default.Mic, contentDescription = "Mic", tint = ResQPrimaryRed, modifier = Modifier.size(36.dp))
+                }
+
+                Text(
+                    text = "Listening for Voice SOS...",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+
+                Text(
+                    text = "Say \"Help\" or \"SOS\" — Auto-activating in $countdown second${if (countdown == 1) "" else "s"}...",
+                    fontSize = 12.sp,
+                    color = ResQTextMuted,
+                    textAlign = TextAlign.Center
+                )
+
+                Button(
+                    onClick = onTrigger,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ResQPrimaryRed)
+                ) {
+                    Text(text = "TRIGGER EMERGENCY DISPATCH NOW", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

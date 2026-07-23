@@ -1,6 +1,9 @@
 package com.example.resqnet.ui.volunteer
 
+import android.content.Context
 import android.content.Intent
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,7 +17,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.SubdirectoryArrowRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.resqnet.data.ResQNetRepository
+import com.example.resqnet.data.SosEventItem
 import com.example.resqnet.theme.*
 
 @Composable
@@ -30,16 +35,37 @@ fun RouteNavigationScreen(
     onEndNavigation: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    var volunteerLat by remember { mutableDoubleStateOf(12.9716) }
+    var volunteerLng by remember { mutableDoubleStateOf(77.5946) }
+    var targetSosEvent by remember { mutableStateOf<SosEventItem?>(null) }
+
+    LaunchedEffect(Unit) {
+        targetSosEvent = ResQNetRepository.localSosEvents.firstOrNull()
+        try {
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val loc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            if (loc != null) {
+                volunteerLat = loc.latitude
+                volunteerLng = loc.longitude
+            }
+        } catch (_: Exception) {}
+    }
+
+    val victimLat = targetSosEvent?.latitude ?: 12.9716
+    val victimLng = targetSosEvent?.longitude ?: 77.5946
+    val victimName = targetSosEvent?.user_id ?: "Victim Emergency"
+    val victimAddress = targetSosEvent?.address ?: "Indiranagar, Bangalore"
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ResQBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Header & Back Button (Picture 3)
+        // Header & Back Button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -51,26 +77,26 @@ fun RouteNavigationScreen(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(ResQCardBackground)
+                    .background(MaterialTheme.colorScheme.surface)
             ) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(text = "Turn-by-turn", fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White)
-                Text(text = "0.4 km • 2 min", fontSize = 12.sp, color = ResQTextMuted)
+                Text(text = "Turn-by-turn Navigation", fontSize = 20.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)
+                Text(text = "Victim: $victimName • $victimAddress", fontSize = 12.sp, color = ResQPrimaryRed, fontWeight = FontWeight.Bold)
             }
         }
 
-        // Instruction Box (Picture 3)
+        // Instruction Box
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(22.dp))
-                .background(ResQCardBackground)
-                .border(1.dp, ResQCardBorder, RoundedCornerShape(22.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(22.dp))
                 .padding(18.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -85,30 +111,30 @@ fun RouteNavigationScreen(
                 }
 
                 Column {
-                    Text(text = "Turn right onto MG Road", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(text = "in 200 m", fontSize = 12.sp, color = ResQTextMuted)
+                    Text(text = "Head towards $victimAddress", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(text = "Live GPS Navigation to Victim Location", fontSize = 12.sp, color = ResQSuccessGreen, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Navigation Map Area (Picture 3)
+        // Navigation Map Area (Tap to open Turn-by-Turn in Google Maps)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .clip(RoundedCornerShape(28.dp))
-                .background(Color(0xFF0D1B2A))
+                .background(MaterialTheme.colorScheme.surface)
                 .border(1.dp, ResQPrimaryRed.copy(alpha = 0.4f), RoundedCornerShape(28.dp))
                 .clickable {
                     try {
-                        val gmmIntentUri = Uri.parse("google.navigation:q=13.0900,80.2800&mode=d")
+                        val gmmIntentUri = Uri.parse("google.navigation:q=$victimLat,$victimLng&mode=d")
                         val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
                         mapIntent.setPackage("com.google.android.apps.maps")
                         context.startActivity(mapIntent)
                     } catch (_: Exception) {
-                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=13.0900,80.2800"))
+                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/dir/?api=1&origin=$volunteerLat,$volunteerLng&destination=$victimLat,$victimLng&travelmode=driving"))
                         context.startActivity(browserIntent)
                     }
                 }
@@ -119,37 +145,38 @@ fun RouteNavigationScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = ResQPrimaryRed, modifier = Modifier.size(36.dp))
+                Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = ResQPrimaryRed, modifier = Modifier.size(44.dp))
 
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White)
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .background(ResQPrimaryRed)
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
-                    Text(text = "Help Needed (0.4 km)", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "🔴 Victim: $victimName", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
                         .background(ResQSuccessGreen)
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
-                    Text(text = "ResQ Fleet 1", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "🟢 You (Volunteer Responder)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Text(
-                    text = "Tap map to open Turn-by-Turn in Google Maps app",
+                    text = "Tap box to start Turn-by-Turn Navigation in Google Maps",
                     fontSize = 11.sp,
-                    color = ResQTextMuted
+                    color = ResQBrandBlue,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Red End Navigation Button (Picture 3)
+        // Red End Navigation Button
         Button(
             onClick = onEndNavigation,
             modifier = Modifier

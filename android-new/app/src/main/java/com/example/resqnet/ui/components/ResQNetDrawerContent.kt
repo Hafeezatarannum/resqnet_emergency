@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,7 +39,6 @@ fun ResQNetDrawerContent(
 ) {
     val mainMenuItems = listOf(
         DrawerMenuItem("home", "Home", Icons.Default.Home),
-        DrawerMenuItem("volunteer_dashboard", "Volunteer Dashboard", Icons.Default.Work),
         DrawerMenuItem("emergency_sos", "Emergency SOS", Icons.Default.Shield),
         DrawerMenuItem("alerts", "Find Volunteers", Icons.Default.Group),
         DrawerMenuItem("hospitals", "Hospitals", Icons.Default.LocalHospital),

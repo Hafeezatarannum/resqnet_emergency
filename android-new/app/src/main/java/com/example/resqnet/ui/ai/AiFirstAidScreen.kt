@@ -34,7 +34,7 @@ fun AiFirstAidScreen() {
     var queryText by remember { mutableStateOf("") }
     val messages = remember {
         mutableStateListOf(
-            Message("ai", "Hello! I am your ResQNet AI Emergency First Aid Assistant. Select a quick guide below or ask any emergency care question.")
+            Message("ai", "Hello! I am your ResQNet AI Emergency First Aid Assistant. Ask any first aid or emergency response question below, or select a quick topic.")
         )
     }
 
@@ -44,13 +44,96 @@ fun AiFirstAidScreen() {
         GuideItem("Burn Treatment", Icons.Default.LocalFireDepartment, ResQBrandBlue)
     )
 
+    fun getAiFirstAidResponse(query: String): String {
+        val q = query.lowercase().trim()
+        return when {
+            q.contains("cpr") || q.contains("cardiac") || q.contains("heart stop") || q.contains("unconscious") ->
+                "🚨 CPR & CARDIAC ARREST RESPONSE:\n" +
+                "1. Check for responsiveness & breathing.\n" +
+                "2. Call 911 or trigger ResQNet SOS immediately.\n" +
+                "3. Place hands in center of chest.\n" +
+                "4. Perform hard & fast chest compressions (100-120 bpm, 2 inches deep).\n" +
+                "5. Continue until emergency medical help arrives."
+
+            q.contains("bleed") || q.contains("blood") || q.contains("cut") || q.contains("wound") ->
+                "🩸 SEVERE BLEEDING CONTROL:\n" +
+                "1. Apply direct, firm pressure over wound with clean cloth.\n" +
+                "2. Keep pressure applied continuously—do not lift cloth to inspect.\n" +
+                "3. Elevate injured area above heart level if possible.\n" +
+                "4. If blood soaks through, place another cloth directly on top.\n" +
+                "5. Call emergency services if bleeding is heavy or spurting."
+
+            q.contains("burn") || q.contains("scald") || q.contains("fire") ->
+                "🔥 BURN FIRST AID:\n" +
+                "1. Cool the burn under cool (not ice-cold) running water for 10–20 minutes.\n" +
+                "2. Remove clothing/jewelry near burn before swelling starts.\n" +
+                "3. Cover burn loosely with sterile non-stick bandage or plastic wrap.\n" +
+                "4. Do NOT pop blisters or apply butter/oils."
+
+            q.contains("snake") || q.contains("bite") || q.contains("venom") ->
+                "🐍 SNAKE BITE EMERGENCY:\n" +
+                "1. Keep victim calm & immobilized; prevent movement to slow venom flow.\n" +
+                "2. Keep bitten limb at or below heart level.\n" +
+                "3. Remove rings, watches, or tight clothing near bite.\n" +
+                "4. Clean wound gently—do NOT suck venom, cut skin, or apply tourniquet.\n" +
+                "5. Transport immediately to hospital with antivenom."
+
+            q.contains("chok") || q.contains("airway") || q.contains("food stuck") ->
+                "😮‍💨 CHOKING EMERGENCY (HEIMLICH MANEUVER):\n" +
+                "1. Stand behind victim and wrap arms around waist.\n" +
+                "2. Make a fist with one hand, place just above navel.\n" +
+                "3. Grasp fist with other hand and give quick, upward abdominal thrusts.\n" +
+                "4. Repeat until object is dislodged or victim becomes unresponsive."
+
+            q.contains("fracture") || q.contains("bone") || q.contains("broken") || q.contains("sprain") ->
+                "🦴 BONE FRACTURE & SPRAIN CARE:\n" +
+                "1. Immobilize the injured area immediately—do NOT try to realign bone.\n" +
+                "2. Apply ice wrapped in towel for 15-20 minutes to reduce swelling.\n" +
+                "3. Support joint with soft padding or splint.\n" +
+                "4. Seek immediate orthopedic emergency care."
+
+            q.contains("seizure") || q.contains("fit") || q.contains("epilepsy") ->
+                "⚡ SEIZURE FIRST AID:\n" +
+                "1. Ease person to floor and turn onto side to keep airway clear.\n" +
+                "2. Clear hard or sharp objects away from victim.\n" +
+                "3. Cushion victim's head with folded jacket or pillow.\n" +
+                "4. Do NOT hold them down or put anything in their mouth."
+
+            q.contains("faint") || q.contains("dizzy") || q.contains("pass out") ->
+                "😵 FAINTING & LOSS OF CONSCIOUSNESS:\n" +
+                "1. Lay person flat on back and elevate legs 12 inches.\n" +
+                "2. Loosen tight collars, belts, or waistbands.\n" +
+                "3. Check breathing; if unresponsive for > 1 min, call emergency services."
+
+            q.contains("stroke") || q.contains("paralysis") || q.contains("speech") ->
+                "🧠 STROKE IDENTIFICATION (FAST Test):\n" +
+                "• F (Face): Ask to smile—does one side droop?\n" +
+                "• A (Arms): Ask to raise both arms—does one arm drift down?\n" +
+                "• S (Speech): Is speech slurred or strange?\n" +
+                "• T (Time): Call emergency services immediately!"
+
+            q.contains("poison") || q.contains("overdose") || q.contains("chemical") ->
+                "⚠️ POISONING & CHEMICAL EXPOSURE:\n" +
+                "1. If swallowed: Do NOT induce vomiting unless instructed by poison control.\n" +
+                "2. If in eyes: Flush eyes with lukewarm water for 15-20 minutes.\n" +
+                "3. Call Poison Control / Emergency Services with chemical name immediately."
+
+            else ->
+                "🩺 FIRST AID GUIDANCE:\n" +
+                "1. Ensure scene safety before approaching victim.\n" +
+                "2. Check responsiveness (Alert, Voice, Pain, Unresponsive).\n" +
+                "3. Call 911 or trigger ResQNet SOS for immediate ambulance dispatch.\n" +
+                "4. Keep victim calm, warm, and comfortable until medical personnel arrive."
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(ResQBackground)
             .padding(16.dp)
     ) {
-        // AI Title
+        // AI Title Header
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -83,11 +166,7 @@ fun AiFirstAidScreen() {
                         .background(ResQCardBackground)
                         .border(1.dp, ResQCardBorder, RoundedCornerShape(18.dp))
                         .clickable {
-                            val response = when (guide.title) {
-                                "CPR Guide" -> "CPR STEPS:\n1. Call 911 / SOS.\n2. Place hands on center of chest.\n3. Push hard and fast at 100-120 bpm (to the beat of 'Staying Alive')."
-                                "Severe Bleeding" -> "BLEEDING CONTROL:\n1. Apply firm, direct pressure with clean cloth.\n2. Do NOT remove cloth if soaked—add another layer on top."
-                                else -> "BURN RELIEF:\n1. Cool burn immediately under cool running water for 10-20 mins.\n2. Cover loosely with sterile cling film or plastic wrap."
-                            }
+                            val response = getAiFirstAidResponse(guide.title)
                             messages.add(Message("user", guide.title))
                             messages.add(Message("ai", response))
                         }
@@ -112,13 +191,12 @@ fun AiFirstAidScreen() {
             items(messages) { msg ->
                 val isAi = msg.sender == "ai"
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = if (isAi) Alignment.CenterStart else Alignment.CenterEnd
                 ) {
                     Box(
                         modifier = Modifier
-                            .widthIn(max = 280.dp)
+                            .widthIn(max = 300.dp)
                             .clip(RoundedCornerShape(18.dp))
                             .background(if (isAi) ResQCardBackground else ResQBrandBlue)
                             .border(1.dp, if (isAi) ResQCardBorder else Color.Transparent, RoundedCornerShape(18.dp))
@@ -161,10 +239,11 @@ fun AiFirstAidScreen() {
             IconButton(
                 onClick = {
                     if (queryText.isNotBlank()) {
-                        messages.add(Message("user", queryText))
                         val userQ = queryText
                         queryText = ""
-                        messages.add(Message("ai", "Regarding '$userQ': Keep calm, ensure safety of the surroundings, and check if the victim is conscious and breathing."))
+                        messages.add(Message("user", userQ))
+                        val aiAns = getAiFirstAidResponse(userQ)
+                        messages.add(Message("ai", aiAns))
                     }
                 },
                 modifier = Modifier

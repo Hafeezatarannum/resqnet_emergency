@@ -1,12 +1,16 @@
 package com.example.resqnet.ui.volunteer
 
+import android.content.Context
 import android.content.Intent
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,6 +32,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.resqnet.data.ResQNetRepository
+import com.example.resqnet.data.SosEventItem
 import com.example.resqnet.theme.*
 
 @Composable
@@ -37,59 +43,83 @@ fun NearbyCasesMapScreen(
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
     var selectedLayer by remember { mutableStateOf("Route") }
+    var volunteerLat by remember { mutableDoubleStateOf(13.0827) }
+    var volunteerLng by remember { mutableDoubleStateOf(80.2707) }
+    var casesList by remember { mutableStateOf<List<SosEventItem>>(emptyList()) }
+
+    // Fetch live user emergency requests & volunteer GPS location
+    LaunchedEffect(Unit) {
+        casesList = ResQNetRepository.getLiveSosEvents()
+        try {
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val lastLoc: Location? = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+
+            if (lastLoc != null) {
+                volunteerLat = lastLoc.latitude
+                volunteerLng = lastLoc.longitude
+            }
+        } catch (_: Exception) {}
+    }
+
+    val firstCitizenCase = casesList.firstOrNull()
+    val victimLat = firstCitizenCase?.latitude ?: 13.0827
+    val victimLng = firstCitizenCase?.longitude ?: 80.2707
+    val victimName = firstCitizenCase?.user_id ?: "Kavitha S (Citizen User)"
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(ResQBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
     ) {
-        // Header (Matching Pic 2)
+        // Header
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Chennai Fleet Live Map",
+                    text = "Nearby Emergency Cases Map",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Monitor real-time incidents and responder locations.",
+                    text = "Navigate from your Volunteer GPS to Citizen User Location.",
                     fontSize = 12.sp,
-                    color = ResQTextMuted
+                    color = ResQPrimaryRed,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
 
-        // Search Bar (Pic 2)
+        // Search Bar
         item {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search Chennai location...", color = ResQTextMuted.copy(alpha = 0.6f), fontSize = 13.sp) },
-                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = ResQTextMuted) },
+                placeholder = { Text("Search location...", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 13.sp) },
+                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = ResQPrimaryRed,
-                    unfocusedBorderColor = ResQCardBorder,
-                    focusedContainerColor = ResQCardBackground,
-                    unfocusedContainerColor = ResQCardBackground
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
 
-        // Interactive Map Box with Google Maps Trigger (Pic 2)
+        // Interactive Map Box (Volunteer -> Citizen User Navigation)
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
                     .clip(RoundedCornerShape(26.dp))
-                    .background(Color(0xFF0D1B2A))
+                    .background(MaterialTheme.colorScheme.surface)
                     .border(1.dp, ResQPrimaryRed.copy(alpha = 0.4f), RoundedCornerShape(26.dp))
                     .padding(16.dp)
             ) {
@@ -108,58 +138,57 @@ fun NearbyCasesMapScreen(
                                 .background(ResQPrimaryRed.copy(alpha = 0.2f))
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
-                            Text(text = "● 3 Active Emergencies Nearby", color = ResQPrimaryRed, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(text = "● ${casesList.size} Active Citizen Requests", color = ResQPrimaryRed, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
 
+                        // Launch Turn-by-Turn Navigation from Volunteer to Citizen User
                         IconButton(
                             onClick = {
                                 try {
-                                    val gmmIntentUri = Uri.parse("geo:13.0827,80.2707?q=13.0827,80.2707(Chennai+Emergency+Fleet)")
+                                    val gmmIntentUri = Uri.parse("google.navigation:q=$victimLat,$victimLng&mode=d")
                                     val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
                                     mapIntent.setPackage("com.google.android.apps.maps")
                                     context.startActivity(mapIntent)
                                 } catch (_: Exception) {
-                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=13.0827,80.2707"))
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/dir/?api=1&origin=$volunteerLat,$volunteerLng&destination=$victimLat,$victimLng&travelmode=driving"))
                                     context.startActivity(browserIntent)
                                 }
                             },
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(ResQCardBackground)
+                                .background(ResQPrimaryRed.copy(alpha = 0.2f))
                         ) {
-                            Icon(imageVector = Icons.Default.LocationOn, contentDescription = "Google Maps", tint = ResQPrimaryRed, modifier = Modifier.size(18.dp))
+                            Icon(imageVector = Icons.Default.Navigation, contentDescription = "Google Maps Navigation", tint = ResQPrimaryRed, modifier = Modifier.size(18.dp))
                         }
                     }
 
-                    // Map Pins Simulation Box
+                    // Map Pins Box showing Volunteer & Citizen User Location
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        MapPinPill("Help Needed", ResQPrimaryRed)
+                        MapPinPill("🔴 Citizen User ($victimName): ${firstCitizenCase?.address ?: "Anna Salai, Chennai"}", ResQPrimaryRed)
                         Spacer(modifier = Modifier.height(10.dp))
-                        MapPinPill("ResQ Fleet 1", ResQSuccessGreen)
-                        Spacer(modifier = Modifier.height(10.dp))
-                        MapPinPill("You (Chennai)", ResQBrandBlue)
+                        MapPinPill("🟢 You (Volunteer GPS Location)", ResQSuccessGreen)
                     }
 
                     Text(
-                        text = "Tap pin to open in Google Maps",
+                        text = "Tap navigation icon to start Google Maps from Volunteer -> User",
                         fontSize = 10.sp,
-                        color = ResQTextMuted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                 }
             }
         }
 
-        // MAP LAYERS Title (Pic 2)
+        // MAP LAYERS Title
         item {
-            Text(text = "MAP LAYERS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ResQTextMuted)
+            Text(text = "MAP LAYERS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        // Map Layer Grid Tiles (Pic 2)
+        // Map Layer Grid Tiles
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -172,20 +201,32 @@ fun NearbyCasesMapScreen(
             }
         }
 
-        // LIVE ROUTE Title (Pic 2)
+        // Active Emergency Cases List
         item {
-            Text(text = "LIVE ROUTE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = ResQTextMuted)
+            Text(text = "ACTIVE CITIZEN USER REQUESTS (${casesList.size})", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
-        // Faster Route Card (Pic 2)
-        item {
+        items(casesList) { caseItem ->
+            val caseLat = caseItem.latitude
+            val caseLng = caseItem.longitude
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(ResQSuccessGreen.copy(alpha = 0.1f))
-                    .border(1.dp, ResQSuccessGreen.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                    .clickable { onNavigateToTurnByTurn() }
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, ResQPrimaryRed.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
+                    .clickable {
+                        try {
+                            val gmmIntentUri = Uri.parse("google.navigation:q=$caseLat,$caseLng&mode=d")
+                            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                            mapIntent.setPackage("com.google.android.apps.maps")
+                            context.startActivity(mapIntent)
+                        } catch (_: Exception) {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/dir/?api=1&origin=$volunteerLat,$volunteerLng&destination=$caseLat,$caseLng&travelmode=driving"))
+                            context.startActivity(browserIntent)
+                        }
+                    }
                     .padding(16.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -193,44 +234,30 @@ fun NearbyCasesMapScreen(
                         modifier = Modifier
                             .size(44.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(ResQSuccessGreen.copy(alpha = 0.2f)),
+                            .background(ResQPrimaryRed.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = ResQSuccessGreen)
+                        Icon(imageVector = Icons.Default.Navigation, contentDescription = null, tint = ResQPrimaryRed)
                     }
 
-                    Column {
-                        Text(text = "Faster route available", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text(text = "Save 4 min via Ring Road. Traffic is clear.", fontSize = 11.sp, color = ResQSuccessGreen)
-                    }
-                }
-            }
-        }
-
-        // High Risk Zone Card (Pic 2)
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(ResQWarningOrange.copy(alpha = 0.1f))
-                    .border(1.dp, ResQWarningOrange.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                    .padding(16.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(ResQWarningOrange.copy(alpha = 0.2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = ResQWarningOrange)
-                    }
-
-                    Column {
-                        Text(text = "High Risk Zone", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ResQWarningOrange)
-                        Text(text = "Multiple accidents reported ahead. Drive carefully.", fontSize = 11.sp, color = ResQTextMuted)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "${(caseItem.emergency_type ?: "Medical").uppercase()} • ${caseItem.user_id}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(text = caseItem.timestamp, fontSize = 10.sp, color = ResQPrimaryRed, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "📍 User Location: ${caseItem.address ?: "Anna Salai, Chennai"}",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(text = "Tap to navigate Turn-by-Turn from Volunteer -> User", fontSize = 11.sp, color = ResQSuccessGreen, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -264,16 +291,16 @@ private fun LayerTile(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (isSelected) ResQPrimaryRed.copy(alpha = 0.15f) else ResQCardBackground)
-            .border(1.dp, if (isSelected) ResQPrimaryRed else ResQCardBorder, RoundedCornerShape(16.dp))
+            .background(if (isSelected) ResQPrimaryRed.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface)
+            .border(1.dp, if (isSelected) ResQPrimaryRed else MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
             .clickable { onClick() }
             .padding(10.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(imageVector = icon, contentDescription = title, tint = if (isSelected) ResQPrimaryRed else ResQTextMuted, modifier = Modifier.size(18.dp))
+            Icon(imageVector = icon, contentDescription = title, tint = if (isSelected) ResQPrimaryRed else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

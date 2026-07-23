@@ -1,10 +1,14 @@
 package com.example.resqnet.ui.contacts
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -18,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,14 +33,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun EmergencyContactsScreen() {
-    var contactList by remember {
-        mutableStateOf(
-            listOf(
-                EmergencyContactItem(id = "1", name = "Muntaz", relation = "Mother", phone = "9989927587"),
-                EmergencyContactItem(id = "2", name = "Ghouse", relation = "Father", phone = "9908822425")
-            )
-        )
-    }
+    val context = LocalContext.current
+    val contactList = ResQNetRepository.localContacts
 
     var showAddDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf("") }
@@ -44,10 +43,7 @@ fun EmergencyContactsScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        val fetched = ResQNetRepository.getEmergencyContacts()
-        if (fetched.isNotEmpty()) {
-            contactList = fetched
-        }
+        ResQNetRepository.getEmergencyContacts()
     }
 
     Column(
@@ -56,7 +52,7 @@ fun EmergencyContactsScreen() {
             .background(ResQBackground)
             .padding(16.dp)
     ) {
-        // Header (Pic 4)
+        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -95,7 +91,7 @@ fun EmergencyContactsScreen() {
                 }
             }
 
-            // Red + Add Button (Pic 4)
+            // Red + Add Button
             Button(
                 onClick = { showAddDialog = true },
                 shape = RoundedCornerShape(16.dp),
@@ -108,7 +104,7 @@ fun EmergencyContactsScreen() {
             }
         }
 
-        // Contact Cards Container (Pic 4)
+        // Contact Cards Container
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -140,10 +136,15 @@ fun EmergencyContactsScreen() {
                             )
                         }
 
-                        // Call & Delete Icons (Pic 4)
+                        // Call & Delete Icons
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             IconButton(
-                                onClick = {},
+                                onClick = {
+                                    try {
+                                        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.phone}"))
+                                        context.startActivity(dialIntent)
+                                    } catch (_: Exception) {}
+                                },
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
@@ -160,10 +161,10 @@ fun EmergencyContactsScreen() {
                             IconButton(
                                 onClick = {
                                     val targetId = contact.id
-                                    contactList = contactList.filter { it.id != targetId }
                                     coroutineScope.launch {
                                         ResQNetRepository.deleteEmergencyContact(targetId)
                                     }
+                                    Toast.makeText(context, "Contact deleted", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier
                                     .size(36.dp)
@@ -222,10 +223,10 @@ fun EmergencyContactsScreen() {
                                 relation = newRelation.ifBlank { "Family" },
                                 phone = newPhone
                             )
-                            contactList = contactList + newItem
                             coroutineScope.launch {
                                 ResQNetRepository.addEmergencyContact(newItem)
                             }
+                            Toast.makeText(context, "Emergency Contact Saved!", Toast.LENGTH_SHORT).show()
                             newName = ""
                             newRelation = ""
                             newPhone = ""

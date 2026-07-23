@@ -1,5 +1,7 @@
 package com.example.resqnet.ui.profile
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,6 +38,7 @@ fun MedicalProfileScreen(
     onNavigateToContacts: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var profile by remember { mutableStateOf(ResQNetRepository.activeProfileState) }
     var showEditDialog by remember { mutableStateOf(false) }
 
@@ -60,7 +64,7 @@ fun MedicalProfileScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 20.dp, bottom = 32.dp)
     ) {
-        // User Avatar Badge (Pic 5)
+        // User Avatar Badge
         item {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
@@ -122,7 +126,7 @@ fun MedicalProfileScreen(
             }
         }
 
-        // Medical ID Card (Pic 5)
+        // Medical ID Card
         item {
             Box(
                 modifier = Modifier
@@ -168,7 +172,7 @@ fun MedicalProfileScreen(
             }
         }
 
-        // Clickable Option Rows (Pic 5)
+        // Clickable Option Rows (Fixed Location Settings Click Intent)
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 ProfileOptionRow(
@@ -182,12 +186,17 @@ fun MedicalProfileScreen(
                     icon = Icons.Default.LocationOn,
                     title = "Location Settings",
                     subtitle = "Always On",
-                    onClick = {}
+                    onClick = {
+                        try {
+                            val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                            context.startActivity(intent)
+                        } catch (_: Exception) {}
+                    }
                 )
             }
         }
 
-        // Red Log Out Button (Pic 5)
+        // Red Log Out Button
         item {
             OutlinedButton(
                 onClick = onLogoutClick,

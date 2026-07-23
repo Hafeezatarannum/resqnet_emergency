@@ -53,7 +53,7 @@ fun EmergencyAlertsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ResQBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         // Top Header
@@ -76,8 +76,8 @@ fun EmergencyAlertsScreen(
                 }
 
                 Column {
-                    Text(text = "Emergency Alerts", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
-                    Text(text = "Live monitoring of incidents in your area.", fontSize = 12.sp, color = ResQTextMuted)
+                    Text(text = "Emergency Alerts", fontSize = 22.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)
+                    Text(text = "Live monitoring of incidents in your area.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -86,8 +86,8 @@ fun EmergencyAlertsScreen(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Search alerts...", color = ResQTextMuted.copy(alpha = 0.6f), fontSize = 13.sp) },
-            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = ResQTextMuted) },
+            placeholder = { Text("Search alerts...", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), fontSize = 13.sp) },
+            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -95,9 +95,9 @@ fun EmergencyAlertsScreen(
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = ResQPrimaryRed,
-                unfocusedBorderColor = ResQCardBorder,
-                focusedContainerColor = ResQCardBackground,
-                unfocusedContainerColor = ResQCardBackground
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
         )
 
@@ -108,7 +108,7 @@ fun EmergencyAlertsScreen(
             }
         } else if (visibleAlerts.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "No active emergency alerts. Area is safe.", color = ResQTextMuted, fontSize = 14.sp)
+                Text(text = "No active emergency alerts. Area is safe.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
             }
         } else {
             LazyVerticalGrid(
@@ -122,7 +122,7 @@ fun EmergencyAlertsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(ResQCardBackground)
+                            .background(MaterialTheme.colorScheme.surface)
                             .border(1.dp, ResQPrimaryRed.copy(alpha = 0.4f), RoundedCornerShape(24.dp))
                             .padding(14.dp)
                     ) {
@@ -142,13 +142,14 @@ fun EmergencyAlertsScreen(
                                     Icon(imageVector = Icons.Default.Notifications, contentDescription = null, tint = ResQPrimaryRed, modifier = Modifier.size(18.dp))
                                 }
 
+                                // Display Exact Request Timestamp
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(ResQPrimaryRed)
                                         .padding(horizontal = 8.dp, vertical = 3.dp)
                                 ) {
-                                    Text(text = "01:42 PM", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text(text = alert.timestamp, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
 
@@ -156,7 +157,7 @@ fun EmergencyAlertsScreen(
                                 text = "${(alert.emergency_type ?: "medical").uppercase()} EMERGENCY",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Black,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             // Clickable Google Maps Location Link
@@ -164,12 +165,12 @@ fun EmergencyAlertsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.clickable {
                                     try {
-                                        val gmmIntentUri = Uri.parse("geo:${alert.latitude ?: 12.9716},${alert.longitude ?: 77.5946}?q=${alert.latitude ?: 12.9716},${alert.longitude ?: 77.5946}(Emergency+Incident)")
+                                        val gmmIntentUri = Uri.parse("google.navigation:q=${alert.latitude},${alert.longitude}")
                                         val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
                                         mapIntent.setPackage("com.google.android.apps.maps")
                                         context.startActivity(mapIntent)
                                     } catch (_: Exception) {
-                                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${alert.latitude ?: 12.9716},${alert.longitude ?: 77.5946}"))
+                                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=${alert.latitude},${alert.longitude}"))
                                         context.startActivity(browserIntent)
                                     }
                                 }

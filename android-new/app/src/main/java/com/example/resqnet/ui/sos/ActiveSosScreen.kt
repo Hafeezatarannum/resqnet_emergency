@@ -45,26 +45,26 @@ fun ActiveSosScreen(
     var currentStep by remember { mutableIntStateOf(1) }
     var isCancelling by remember { mutableStateOf(false) }
 
-    // Automatic stepper progression & SMS sending
+    // Automatic stepper progression & SMS sending with real user GPS location
     LaunchedEffect(Unit) {
-        // Step 1: Create SOS in Supabase
-        val event = ResQNetRepository.createSosEvent(emergencyType = "Medical", severity = "high")
+        // Step 1: Create SOS in Supabase with real user GPS
+        val event = ResQNetRepository.createSosEvent(context, emergencyType = "Medical", severity = "high")
 
-        // Send Emergency SMS to contacts
+        // Send Emergency SMS to contacts containing exact Google Maps URL
         val contacts = ResQNetRepository.getEmergencyContacts()
         if (contacts.isNotEmpty()) {
             val primaryPhone = contacts.first().phone
             try {
                 val smsManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? SmsManager
                     ?: SmsManager.getDefault()
-                val message = "EMERGENCY SOS! ResQNet alert triggered. Live GPS: https://maps.google.com/?q=${event.latitude},${event.longitude}"
+                val message = "EMERGENCY SOS! ResQNet alert triggered. Live GPS Location: https://maps.google.com/?q=${event.latitude},${event.longitude}"
                 smsManager.sendTextMessage(primaryPhone, null, message, null, null)
             } catch (e: Exception) {
                 // Fallback to SMS Intent if permission missing
                 try {
                     val smsIntent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("smsto:$primaryPhone")
-                        putExtra("sms_body", "EMERGENCY SOS! ResQNet alert triggered. Live GPS: https://maps.google.com/?q=12.9716,77.5946")
+                        putExtra("sms_body", "EMERGENCY SOS! ResQNet alert triggered. Live GPS Location: https://maps.google.com/?q=${event.latitude},${event.longitude}")
                     }
                     context.startActivity(smsIntent)
                 } catch (_: Exception) {}
@@ -88,7 +88,7 @@ fun ActiveSosScreen(
             .padding(20.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Light Card Backdrop (Matching Pic 1)
+        // Light Card Backdrop
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
@@ -101,7 +101,7 @@ fun ActiveSosScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Shield Badge Icon (Pic 1)
+                // Shield Badge Icon
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -119,7 +119,7 @@ fun ActiveSosScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Title & Subtitle (Pic 1)
+                // Title & Subtitle
                 Text(
                     text = "SOS ACTIVATED",
                     fontSize = 22.sp,
@@ -139,7 +139,7 @@ fun ActiveSosScreen(
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                // Vertical Stepper Timeline (Pic 1)
+                // Vertical Stepper Timeline
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(18.dp)
@@ -183,7 +183,7 @@ fun ActiveSosScreen(
 
                 Spacer(modifier = Modifier.height(18.dp))
 
-                // Cancel SOS Light Red Button (Pic 1)
+                // Cancel SOS Light Red Button
                 Button(
                     onClick = {
                         isCancelling = true
