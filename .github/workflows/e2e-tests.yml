@@ -1,4 +1,4 @@
-name: ResQNet E2E Automation Tests
+name: ResQNet Web & Mobile E2E Automation Tests
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  web-tests:
-    name: Selenium Web E2E Tests
+  e2e-tests:
+    name: Web & Appium Mobile E2E Test Suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -23,7 +23,7 @@ jobs:
       - name: Install Dependencies
         run: npm ci || npm install
 
-      - name: Start Dev Server & Run Selenium Tests
+      - name: Start Dev Server & Run Selenium Web Tests (308 Test Cases)
         run: |
           npm run dev &
           npx wait-on http://127.0.0.1:5173 -t 90000
@@ -35,10 +35,29 @@ jobs:
           VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
 
-      - name: Upload Excel Test Report Artifact
+      - name: Run Appium Mobile E2E Tests (500 Test Cases)
+        if: always()
+        run: |
+          npx cross-env HEADLESS=true npm run test:mobile
+        env:
+          CI: true
+          PORT: 5173
+          TEST_URL: http://127.0.0.1:5173
+          VITE_SUPABASE_URL: https://ziutypjgzzayeqwkdnco.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_23qyxTDgqsbRpC7-JaA3DQ_4HtpSNy1
+
+      - name: Upload Web E2E Excel Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ResQNet_E2E_Test_Report_Excel
+          name: ResQNet_Web_E2E_Test_Report_Excel
           path: e2e-tests/reports/web/*.xlsx
+          retention-days: 30
+
+      - name: Upload Mobile Appium E2E Excel Report (500 Test Cases)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ResQNet_Mobile_Appium_E2E_Test_Report_Excel
+          path: e2e-tests/reports/mobile/*.xlsx
           retention-days: 30
